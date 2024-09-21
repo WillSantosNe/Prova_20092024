@@ -27,20 +27,18 @@ fun DetalheProduto(label: String, valor: String) {
     ) {
         Text(
             text = label,
-            fontSize = 18.sp, // Tamanho da fonte
-            fontWeight = FontWeight.Medium, // Peso da fonte
-            color = Color.Black // Cor do rótulo
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black
         )
         Text(
             text = valor,
             fontSize = 18.sp,
             fontWeight = FontWeight.Normal,
-            color = Color.DarkGray // Cor do valor
+            color = Color.DarkGray
         )
     }
 }
-
-
 
 
 // Maneira de como o produto será exibido na Listagem

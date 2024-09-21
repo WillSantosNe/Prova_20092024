@@ -6,8 +6,3 @@ data class Produto(
     var preco : Double,
     var quantidade_est : Int,
 )
-
-
-object ListaProdutos {
-    val listaProdutos = mutableListOf<Produto>()
-}

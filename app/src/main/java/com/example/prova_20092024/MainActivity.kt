@@ -54,15 +54,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun TelaCadastroProduto(navController: NavController) {
     var nome by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("") }
     var preco by remember { mutableStateOf("") }
     var quantidadeEstoque by remember { mutableStateOf("") }
-
-    // Define se a mensagem de produto cadastrado irá aparecer ou não
-    var mensagemSucesso by remember { mutableStateOf(false) }
+    var mensagemSucesso by remember { mutableStateOf(false) } // Estado para controlar a exibição da mensagem de sucesso
 
     val context = LocalContext.current
 
@@ -72,15 +71,13 @@ fun TelaCadastroProduto(navController: NavController) {
             .padding(18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
-        // Cabeçalho centralizado
         Text(
             text = "CADASTRO DE PRODUTOS",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(16.dp),
             textAlign = TextAlign.Center,
-            fontSize = 24.sp // Definindo o tamanho da fonte para 24sp
+            color = Color.DarkGray
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -122,7 +119,7 @@ fun TelaCadastroProduto(navController: NavController) {
                 mensagemSucesso = false // Oculta mensagem ao editar campo
             },
             label = { Text(text = "Preço") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number) // Corrige para aceitar números decimais
         )
 
         // Campo Quantidade em Estoque
@@ -139,26 +136,26 @@ fun TelaCadastroProduto(navController: NavController) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp)) // Espaçamento entre o formulário e a mensagem
 
-        // Box para mostrar a mensagem de sucesso entre formulário e botão de cadastro
+        // Box para manter o espaço da mensagem
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(40.dp) // Altura reservada para a mensagem
                 .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center // Centraliza o texto dentro do Box
         ) {
             if (mensagemSucesso) {
                 Text(
                     text = "Produto cadastrado com sucesso!",
-                    color = Color.Green
+                    color = Color.Green,
+                    fontSize = 18.sp
                 )
             }
         }
 
-        // Espaço adicional para separar o botão
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp)) // Espaço adicional para separar o botão
 
         // Botão de Cadastrar
         Button(
@@ -174,19 +171,24 @@ fun TelaCadastroProduto(navController: NavController) {
                     nome.isBlank() || categoria.isBlank() || preco.isBlank() || quantidadeEstoque.isBlank() -> {
                         Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
                     }
-                    precoDouble == null -> {
-                        Toast.makeText(context, "Preço inválido", Toast.LENGTH_SHORT).show()
+                    precoDouble == null || precoDouble < 0 -> {
+                        Toast.makeText(context, "Preço inválido. Deve ser maior ou igual a zero.", Toast.LENGTH_SHORT).show()
                     }
-                    quantidadeInt == null -> {
-                        Toast.makeText(context, "Quantidade inválida", Toast.LENGTH_SHORT).show()
+                    quantidadeInt == null || quantidadeInt < 1 -> {
+                        Toast.makeText(context, "Quantidade inválida. Deve ser maior ou igual a 1.", Toast.LENGTH_SHORT).show()
                     }
                     else -> {
-                        ListaProdutos.listaProdutos.add(Produto(nome, categoria, precoDouble, quantidadeInt))
-                        nome = ""
-                        categoria = ""
-                        preco = ""
-                        quantidadeEstoque = ""
-                        mensagemSucesso = true
+                        val produto = Produto(nome, categoria, precoDouble, quantidadeInt)
+                        val sucesso = Estoque.adicionarProduto(produto) // Usando a classe Estoque para adicionar o produto
+                        if (sucesso) {
+                            nome = ""
+                            categoria = ""
+                            preco = ""
+                            quantidadeEstoque = ""
+                            mensagemSucesso = true
+                        } else {
+                            Toast.makeText(context, "Erro ao adicionar produto. Verifique os dados.", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
@@ -196,12 +198,9 @@ fun TelaCadastroProduto(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Botão para ir à tela de listagem
+        // Botão para ir à tela de listagem de produtos
         Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-                .height(50.dp),
+            modifier = Modifier.fillMaxWidth(),
             onClick = { navController.navigate("telaLista") }
         ) {
             Text(text = "Ir para Listagem de Produtos")
@@ -213,24 +212,28 @@ fun TelaCadastroProduto(navController: NavController) {
 @Composable
 fun TelaListaProdutos(navController: NavController) {
     // Recuperando lista de produtos de outra tela
-    val produtos = remember { ListaProdutos.listaProdutos }
-    val gson = remember { Gson() } // Inicializando o Gson
+    val produtos = remember { Estoque.listaProdutos }
+
+    // Inicializando o Gson
+    val gson = remember { Gson() }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Lista de Produtos",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+            text = "LISTA DE PRODUTOS",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(16.dp),
             textAlign = TextAlign.Center,
-            fontSize = 24.sp
+            color = Color.DarkGray
         )
 
         if (produtos.isEmpty()) {
+
             // Mensagem de lista vazia
             Text(
                 text = "Nenhum produto cadastrado.",
@@ -247,12 +250,22 @@ fun TelaListaProdutos(navController: NavController) {
             ) {
                 items(produtos) { produto ->
                     ProdutoItem(produto = produto, onDetalhesClick = {
+
                         // Serializa o objeto Produto para JSON usando Gson
                         val produtoJson = gson.toJson(produto)
+
                         navController.navigate("telaDetalhes/$produtoJson")
                     })
                 }
             }
+        }
+
+        // Botão para exibir as estatísticas
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { navController.navigate("telaEstatisticas") }
+        ) {
+            Text(text = "Estatísticas")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -270,6 +283,8 @@ fun TelaListaProdutos(navController: NavController) {
 
 @Composable
 fun TelaDetalhesProduto(navController: NavController, produtoJson: String?) {
+
+    // Capturando objeto JSON
     val gson = remember { Gson() }
 
     // Desserializa o JSON de volta para o objeto Produto
@@ -281,7 +296,6 @@ fun TelaDetalhesProduto(navController: NavController, produtoJson: String?) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Título
         Text(
             text = "Detalhes do Produto",
             modifier = Modifier
@@ -316,6 +330,57 @@ fun TelaDetalhesProduto(navController: NavController, produtoJson: String?) {
 }
 
 
+@Composable
+fun TelaEstatisticas(navController: NavController) {
+    val valorTotalEstoque = Estoque.calcularValorTotalEstoque()
+    val quantidadeTotalProdutos = Estoque.calcularQuantidadeTotalProdutos()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "ESTATÍSTICAS DO ESTOQUE",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.DarkGray,
+            modifier = Modifier.padding(16.dp),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Exibe o valor total do estoque
+        Text(
+            text = "Valor Total: R$ %.2f".format(valorTotalEstoque),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        // Exibe a quantidade total de produtos
+        Text(
+            text = "Quantidade Total: $quantidadeTotalProdutos unidades",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Botão para voltar à lista de produtos
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = { navController.popBackStack() }
+        ) {
+            Text(text = "Voltar à Lista de Produtos")
+        }
+    }
+}
 
 
 @Composable
@@ -328,7 +393,7 @@ fun Main(){
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
+        // Configurando Navegação
         NavHost(navController = navController, startDestination = "telaCadastro") {
             composable("telaCadastro") { TelaCadastroProduto(navController) }
             composable("telaLista") { TelaListaProdutos(navController) }
@@ -336,12 +401,8 @@ fun Main(){
                 val produtoJson = backStackEntry.arguments?.getString("produtoJson")
                 TelaDetalhesProduto(navController, produtoJson)
             }
+            composable("telaEstatisticas") { TelaEstatisticas(navController) }
         }
+
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainPreview() {
-
 }
